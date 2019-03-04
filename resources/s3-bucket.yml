@@ -1,0 +1,18 @@
+Resources:
+  S3BucketDocuments:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: testDocumentFiles
+      CorsConfiguration:
+        CorsRules:
+          -
+            AllowedOrigins:
+              - '*'
+            AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - HEAD
+            MaxAge: 3000
