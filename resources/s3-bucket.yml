@@ -2,7 +2,7 @@ Resources:
   S3BucketDocuments:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: testDocumentFiles
+      BucketName: ${self:custom.s3bucketName}
       CorsConfiguration:
         CorsRules:
           -

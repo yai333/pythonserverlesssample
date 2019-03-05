@@ -5,47 +5,54 @@ provider:
   runtime: python3.6
   region: ap-southeast-2
   stage: ${opt:stage, 'dev'}
+  timeout: 300
 
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#      - "dynamodb:*"
-#      Resource:
-#      - "Fn::GetAtt": [DocumentsTable, Arn]
-#      - "Fn::Join":
-#        - "/"
-#        - - { "Fn::GetAtt": [DocumentsTable, Arn] }
-#          - "index/*"
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "Fn::GetAtt": [DocumentsTable, Arn]
+        - "Fn::Join":
+          - "/"
+          - - { "Fn::GetAtt": [DocumentsTable, Arn] }
+            - "index/*"
 #    - Effect: "Allow"
 #      Action:
 #        - "s3:GetObject"
+#        - "s3:GetBucketNotification"
+#        - "s3:PutBucketNotification"
 #      Resource:
-#        Fn::Join: ['', [Fn::GetAtt: [ S3BucketDocuments, Arn ], '/*'] ]
+#        Fn::Join:
+#          - ""
+#          - - { "Fn::GetAtt": [DocumentsTable, Arn] }
 
-#custom:
-#  tableThroughputs:
-#    production: 5
-#    default: 1
-#    tableThroughput: ${self:custom.tableThroughputs, self:custom.tableThroughputs.default}
-#  documentsTableName: $DocumentsTable
+plugins:
+ - serverless-python-requirements
 
-#plugins:
-#   - serverless-pseudo-parameters
+custom:
+  tableThroughput: 50
+  documentsTableName: DocumentsTable
+  s3bucketName: dev.document.files
+  pythonRequirements:
+    dockerizePip: non-linux
+
 
 functions:
-  hello:
+  importCSVToDB:
     handler: handler.importCSVToDB
-#    environment:
-#      documentsTable: ${self:custom.documentsTableName}
-#    events:
-#      - s3:
-#          bucket:  { Ref: DocumentsTable }
-#          event: s3:ObjectCreated:*
-#          rules:
-#            - suffix: .csv
+    environment:
+      documentsTable: ${self:custom.documentsTableName}
+      bucketName: ${self:custom.s3bucketName}
+    events:
+      - s3:
+          bucket: ${self:custom.s3bucketName}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .csv
 
-#resources:
-#  # DynamoDB
-#  - ${file(resources/dynamodb-table.yml)}
-#  # S3
-#  - ${file(resources/s3-bucket.yml)}
+resources:
+  # DynamoDB
+  - ${file(resources/dynamodb-table.yml)}
+  # S3
+  # - ${file(resources/s3-bucket.yml)}
