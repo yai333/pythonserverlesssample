@@ -17,15 +17,14 @@ provider:
           - "/"
           - - { "Fn::GetAtt": [DocumentsTable, Arn] }
             - "index/*"
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:GetObject"
-#        - "s3:GetBucketNotification"
-#        - "s3:PutBucketNotification"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - { "Fn::GetAtt": [DocumentsTable, Arn] }
+    - Effect: "Allow"
+      Action:
+        - "s3:GetObject"
+        - "s3:GetBucketNotification"
+        - "s3:PutBucketNotification"
+      Resource:
+        Fn::Join:
+          - arn:aws:s3:::${self:custom.s3bucketName}/*
 
 plugins:
  - serverless-python-requirements

@@ -8,6 +8,8 @@ import logging
 dbClient = boto3.client('dynamodb')
 s3 = boto3.client('s3')
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def importCSVToDB(event, context):
     documentsTable = os.environ['documentsTable']
