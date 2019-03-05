@@ -2,17 +2,18 @@ import json
 import boto3
 import os
 import pandas as pd
-import asyncio
 import logging
 
-dbClient = boto3.client('dynamodb')
+db_client = boto3.client('dynamodb')
 s3 = boto3.client('s3')
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def importCSVToDB(event, context):
-    documentsTable = os.environ['documentsTable']
+    logger.info('got event{}'.format(event))
+
+    documents_table = os.environ['documentsTable']
     bucket_name = event['Records'][0]['s3']['bucket']['name']
     file_key = event['Records'][0]['s3']['object']['key']
 
@@ -20,7 +21,7 @@ def importCSVToDB(event, context):
 
     csv = s3.get_object(Bucket=bucket_name, Key=file_key)
 
-    df = pd.read_csv(csv, skip_blank_lines=True,
+    df = pd.read_csv(csv['Body'], skip_blank_lines=True,
                      usecols=['REGISTER_NAME', 'AFS_LIC_NUM', 'AFS_LIC_NAME', 'AFS_LIC_ADD_LOCAL',
                               'AFS_LIC_ADD_STATE', 'AFS_LIC_ADD_PCODE'])
 
@@ -30,18 +31,17 @@ def importCSVToDB(event, context):
 
     for value in values:
         if value["AFS_LIC_NUM"]:
-            last_updated = value["AFS_LIC_NUM"]
-            dbClient.update_item(
-                TableName=documentsTable,
+            last_updated = value["AFS_LIC_NAME"]
+            db_client.update_item(
+                TableName=documents_table,
                 Key={
                     'id': {"S": value["AFS_LIC_NUM"]}
                 },
                 UpdateExpression="set reg_name = :r",
                 ExpressionAttributeValues={
-                    ':r': {"S": value['REGISTER_NAME']},
+                    ':r': {"S": value['AFS_LIC_NAME']},
                 },
                 ReturnValues="UPDATED_NEW"
-
             )
 
-    logger.info('last updated value {}'.format(last_updated))
+    logger.info('last updated register {}'.format(last_updated))

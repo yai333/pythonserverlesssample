@@ -22,36 +22,38 @@ provider:
         - "s3:GetObject"
         - "s3:GetBucketNotification"
         - "s3:PutBucketNotification"
-      Resource:
-        Fn::Join:
-          - arn:aws:s3:::${self:custom.s3bucketName}/*
+      Resource: arn:aws:s3:::${self:custom.s3bucketName}/*
 
 plugins:
- - serverless-python-requirements
-
+  - serverless-python-requirements
 custom:
   tableThroughput: 50
   documentsTableName: DocumentsTable
   s3bucketName: dev.document.files
   pythonRequirements:
     dockerizePip: non-linux
+    layer: true
 
+package:
+  exclude:
+    - bin/**
+    - lib/**
 
 functions:
   importCSVToDB:
     handler: handler.importCSVToDB
+    layers:
+      - {Ref: PythonRequirementsLambdaLayer}
     environment:
       documentsTable: ${self:custom.documentsTableName}
       bucketName: ${self:custom.s3bucketName}
     events:
       - s3:
           bucket: ${self:custom.s3bucketName}
-          event: s3:ObjectCreated:*
+          event: s3:ObjectCreated:Put
           rules:
             - suffix: .csv
 
 resources:
   # DynamoDB
   - ${file(resources/dynamodb-table.yml)}
-  # S3
-  # - ${file(resources/s3-bucket.yml)}
